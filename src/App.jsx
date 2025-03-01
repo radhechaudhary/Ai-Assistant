@@ -10,6 +10,7 @@ function App() {
   const [isListening, setIsListening] = useState(false);
   const [isAnswerd, setIsAnswerd]= useState(false);
   const typingRef= useRef();
+  const scrollBottomRef= useRef();
 
   useEffect(()=>{window.speechSynthesis.cancel()},[]) // useEffect to stop the previos speech on reloading
   
@@ -59,6 +60,13 @@ function App() {
                 } else {
                     setMessage(displayedText); // Remove cursor when typing finishes
                 }
+                const div = scrollBottomRef.current;
+                if (div) { // always keep the bottom view
+                  div.scrollTo({
+                  top: div.scrollHeight,
+                  behavior: 'smooth' // Smooth scrolling
+                  });
+                }
               }
               utterance.onstart=()=>{
                 typingIndex = 0;
@@ -104,7 +112,7 @@ function App() {
       <div className='box'>
         <Voice  setMessage={setMessage} setSendingMessage={setSendingMessage} isListening={isListening} setIsListening={setIsListening} setIsAnswerd={setIsAnswerd} typingRef={typingRef}/>
         {isListening?<img src={recording}/>:null}
-        {isAnswerd?<div className="ques_ans">
+        {isAnswerd?<div className="ques_ans" ref={scrollBottomRef}>
           <h3 style={{fontSize:'16px', transition:'width 1s ease-in-out'}}>{message}</h3>
         </div>:null}
       </div>

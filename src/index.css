@@ -9,6 +9,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+html{
+  overflow: hidden;
 }
 *{
   margin:0;
@@ -17,16 +21,13 @@
   font-family: "Bodoni Moda", sans-serif;
   font-style: normal;
 }
-body {
-
-}
 .Ai_name{
   background: linear-gradient(to right, rgb(68,166,218) 30%, red);
   color:transparent;
   background-clip: text;
 }
 .container{
-  width:100vw;;
+  width:100vw;
   height:100vh;
   display: flex;
   flex-direction: column;
@@ -62,21 +63,27 @@ body {
   border-radius: 10px;
 }
 .ques_ans{
-  width:400px;
+  width:100%;
   border-radius: 10px;
   background-color: rgb(45, 45, 45);
   padding:10px;
   display: flex;
   justify-content: center;
   overflow-y: scroll;
-  padding: 5px;
 }
 .ques_ans::-webkit-scrollbar{
   display: none;
 }
 @media(max-width:500px){
-  .ques_ans{
-    width:90%;
+  .box{
+    width:80% !important;
+    height: 250px !important;
+  }
+  .Ai_name{
+    font-size: 25px !important;
+  }
+  .button{
+    font-size: 16px;
   }
 }
 
