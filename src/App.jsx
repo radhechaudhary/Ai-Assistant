@@ -11,10 +11,10 @@ function App() {
   const [isAnswerd, setIsAnswerd]= useState(false);
   const typingRef= useRef();
 
-  useEffect(()=>{window.speechSynthesis.cancel()},[])
+  useEffect(()=>{window.speechSynthesis.cancel()},[]) // useEffect to stop the previos speech on reloading
   
   useEffect(()=>{
-    function speakText(text) {
+    function speakText(text) { // function to speak the message from gemini
       if (!text || typeof text !== "string") {
           console.warn("Invalid text input for speech synthesis.");
           return;
@@ -41,35 +41,38 @@ function App() {
           chunks.push(currentChunk.trim());
       }  
       let index = 0;
-      let idx=0;
+      let typingIndex=0;
       let displayedText = "";
 
-      function speakNextChunk() {
+      function speakNextChunk() { // function to speak every chunk
           if (index < chunks.length) {
               const utterance = new SpeechSynthesisUtterance(chunks[index]);
               utterance.rate = 1; // 🔹 Adjust speed (1 = normal)
               utterance.pitch = 1; // 🔹 Adjust pitch
 
-              function typeEffect() {
-                if (idx < chunks[index].length) {
-                displayedText += chunks[index][idx];
-                setMessage((prev)=>displayedText + "|"); // Show typing effect
-                idx++;
-                typingRef.current=setTimeout(typeEffect, 60); // Adjust speed for typing effect
-                } 
-                else {
-                  setMessage(text); // Remove cursor at end
+              function typeEffect(chunk) { // function for typing effect when the agent speaks
+                if (typingIndex < chunk.length) {
+                    displayedText += chunk[typingIndex];
+                    setMessage(displayedText + "|"); // Show typing effect
+                    typingIndex++;
+                    typingRef.current = setTimeout(() => typeEffect(chunk), 50);
+                } else {
+                    setMessage(displayedText); // Remove cursor when typing finishes
                 }
               }
               utterance.onstart=()=>{
-                typeEffect();
+                typingIndex = 0;
+                typeEffect(chunks[index]);
               }
               utterance.onend = () => {
                   index++;
-                  setTimeout(()=>{speakNextChunk()}, 200); // 🔹 Ensures smooth transition
+                  speakNextChunk(); // 🔹 Ensures smooth transition
               };
               utterance.onerror = (e) => console.error("Speech synthesis error:", e.message);
               synth.speak(utterance); // 🔥 Ensures browser fully loads speech
+          }
+          else{
+            setMessage(text)
           }
       }
   
@@ -78,25 +81,19 @@ function App() {
           console.warn("Speech synthesis is already running.");
           return;
       }
-      
       speakNextChunk(); // ✅ Start speaking
   }
-  
     if(sendingMessage && message.length>0){
       setSendingMessage(false)
       run(message)
       .then((data) => {
-        
         if (data) {
-          // setIsAnswerd(false);
-          // setMessage("");
           setTimeout(()=>setIsListening(false), 500)
           speakText(data);
         }
         else setIsListening(false);
       })
     }
-    // else setIsListening(false)
   },[sendingMessage])
   
   

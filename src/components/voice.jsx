@@ -17,21 +17,19 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening , se
         recognitionRef.current.continuous = false; // Stops automatically when silence is detected
         recognitionRef.current.interimResults = true;
 
-        recognitionRef.current.onstart = () => {
+        recognitionRef.current.onstart = () => { // listening
             setIsListening(true);
-            // console.log("🎙️ Listening...");
         };
 
         recognitionRef.current.onresult = (event) => {
             const transcript = Array.from(event.results)
                 .map((result) => result[0].transcript)
                 .join('');
-            setIsAnswerd(true)
-            setMessage(transcript);
+            setIsAnswerd(true) // to display the question
+            setMessage(transcript); // setting question
         };
 
         recognitionRef.current.onend = () => {
-            // console.log("⏸️ Speech recognition stopped (silence detected).");
             setSendingMessage(true);
             // ❌ No restart here
         };
@@ -39,7 +37,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening , se
         recognitionRef.current.onerror = (event) => {
             console.error("❌ Speech recognition error:", event.error);
             if(event.error==='network'){
-                alert('no internet')
+                alert('No Internet')
             }
             setIsListening(false);
         };
@@ -52,8 +50,8 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening , se
     }, []);
 
     function startListening() {
-        window.speechSynthesis.cancel()
-        clearTimeout(typingRef.current)
+        window.speechSynthesis.cancel() // stop previous sppech when started listning
+        clearTimeout(typingRef.current) // stop typing
         if (!recognitionRef.current) return;
         setIsListening(true);
         setIsAnswerd(false)
