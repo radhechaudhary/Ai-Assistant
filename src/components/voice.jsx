@@ -1,11 +1,9 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import MicIcon from "@mui/icons-material/Mic";
-import MicOffIcon from "@mui/icons-material/MicOff";
 
 function Voice({ setMessage, setSendingMessage, isListening, setIsListening, setIsAnswerd, typingRef }) {
     const recognitionRef = useRef(null);
     const silenceTimeoutRef = useRef(null);
-    const [isManualStop, setIsManualStop] = useState(false);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -15,43 +13,47 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
         }
 
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = !/iPhone|iPad|iPod/i.test(navigator.userAgent); // ✅ iOS fix (forces auto-stop)
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = "en-US";
+        recognitionRef.current.continuous = false; // ✅ Stops when silence is detected
+        recognitionRef.current.interimResults = true; // ✅ Show partial results before finalizing
+        recognitionRef.current.lang = "en-US"; // ✅ Set language to English
 
         recognitionRef.current.onstart = () => {
             setIsListening(true);
-            setIsManualStop(false);
-            clearTimeout(silenceTimeoutRef.current);
+            clearTimeout(silenceTimeoutRef.current); // ✅ Reset silence timer on start
         };
 
         recognitionRef.current.onresult = (event) => {
-            const transcript = Array.from(event.results).map((result) => result[0].transcript).join("");
+            const transcript = Array.from(event.results)
+                .map((result) => result[0].transcript)
+                .join("");
+
             setIsAnswerd(true);
             setMessage(transcript);
 
             if (event.results[0].isFinal) {
+                // ✅ Start a silence timer when final speech is detected
                 silenceTimeoutRef.current = setTimeout(() => {
                     stopListening();
-                }, 2000); // ✅ Stops after 2 seconds of silence
+                }, 2000); // ✅ Adjust timeout for silence detection
             }
         };
 
         recognitionRef.current.onend = () => {
-            setIsListening(false);
-            if (!isManualStop) {
-                setSendingMessage(true); // ✅ Only sends message if user didn't manually stop
-            }
+            if (!isListening) return; // ✅ Prevent double stopping
+            stopListening();
         };
 
         recognitionRef.current.onerror = (event) => {
             console.error("❌ Speech recognition error:", event.error);
-            setIsListening(false);
+            if (event.error === "network") {
+                alert("❌ No Internet Connection!");
+            }
+            stopListening();
         };
 
         return () => {
             if (recognitionRef.current) {
-                recognitionRef.current.abort();
+                recognitionRef.current.abort(); // ✅ Stops recognition properly on unmount
             }
         };
     }, []);
@@ -60,20 +62,15 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
         if (!recognitionRef.current) return;
         window.speechSynthesis.cancel();
         clearTimeout(typingRef.current);
-        clearTimeout(silenceTimeoutRef.current);
-
         setIsListening(true);
         setIsAnswerd(false);
-        setIsManualStop(false);
-
         recognitionRef.current.start();
     }
 
     function stopListening() {
         if (!recognitionRef.current) return;
-        setIsManualStop(true);
-        setIsListening(false);
         recognitionRef.current.stop();
+        setSendingMessage(true); // ✅ Sends the message when silence is detected
     }
 
     return (
@@ -82,11 +79,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
                 <button className="button" onClick={startListening}>
                     Start Listening <MicIcon />
                 </button>
-            ) : (
-                <button className="button stop" onClick={stopListening}>
-                    Stop <MicOffIcon />
-                </button>
-            )}
+            ) : null}
         </>
     );
 }
