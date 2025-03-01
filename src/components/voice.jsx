@@ -34,7 +34,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
                 // ✅ Start a silence timer when final speech is detected
                 silenceTimeoutRef.current = setTimeout(() => {
                     stopListening();
-                }, 1200); // ✅ Adjust timeout for silence detection
+                }, 2000); // ✅ Adjust timeout for silence detection
             }
         };
 
