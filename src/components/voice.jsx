@@ -60,19 +60,22 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
 
     function startListening() {
         if (!recognitionRef.current) return;
-        window.speechSynthesis.cancel();
-        clearTimeout(typingRef.current);
+        window.setTimeout(() => {
+            window.speechSynthesis.cancel();
+        }, 100);
+        if (typingRef.current) {
+            clearTimeout(typingRef.current);
+            typingRef.current = null;
+        }
         setIsListening(true);
         setIsAnswerd(false);
         recognitionRef.current.start();
     }
-
     function stopListening() {
         if (!recognitionRef.current) return;
         recognitionRef.current.stop();
         setSendingMessage(true); // ✅ Sends the message when silence is detected
     }
-
     return (
         <>
             {!isListening ? (
