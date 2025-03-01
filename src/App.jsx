@@ -15,6 +15,7 @@ function App() {
   useEffect(()=>{window.speechSynthesis.cancel()},[]) // useEffect to stop the previos speech on reloading
   
   useEffect(()=>{
+    
     function speakText(text) { // function to speak the message from gemini
       if (!text || typeof text !== "string") {
           console.warn("Invalid text input for speech synthesis.");

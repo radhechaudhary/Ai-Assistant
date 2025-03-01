@@ -5,7 +5,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
     const recognitionRef = useRef(null);
     const silenceTimeoutRef = useRef(null);
 
-    useEffect(() => {
+    useEffect(() => {  // useEffect for sppechRecognition setup
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             alert("❌ Your browser does not support Speech Recognition.");
@@ -40,7 +40,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
 
         recognitionRef.current.onend = () => {
             if (!isListening) return; // ✅ Prevent double stopping
-            stopListening();
+            stopListening(); // manually stop listening
         };
 
         recognitionRef.current.onerror = (event) => {
@@ -48,7 +48,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
             if (event.error === "network") {
                 alert("❌ No Internet Connection!");
             }
-            stopListening();
+            stopListening(); // manually stop listening for mobile phones
         };
 
         return () => {
@@ -58,12 +58,13 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
         };
     }, []);
 
-    function startListening() {
+    function startListening() {  // function to startlistening
         if (!recognitionRef.current) return;
-        window.setTimeout(() => {
+        window.speechSynthesis.cancel();
+        window.setTimeout(() => {  // for force cancel
             window.speechSynthesis.cancel();
         }, 100);
-        if (typingRef.current) {
+        if (typingRef.current) { 
             clearTimeout(typingRef.current);
             typingRef.current = null;
         }
@@ -71,7 +72,7 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
         setIsAnswerd(false);
         recognitionRef.current.start();
     }
-    function stopListening() {
+    function stopListening() { // function to stop Listening
         if (!recognitionRef.current) return;
         recognitionRef.current.stop();
         setSendingMessage(true); // ✅ Sends the message when silence is detected
