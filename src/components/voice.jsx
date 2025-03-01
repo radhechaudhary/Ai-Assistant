@@ -3,7 +3,7 @@ import MicIcon from "@mui/icons-material/Mic";
 
 function Voice({ setMessage, setSendingMessage, isListening, setIsListening, setIsAnswerd, typingRef }) {
     const recognitionRef = useRef(null);
-    const silenceTimeoutRef = useRef(null);
+    var currMessage=""
 
     useEffect(() => {  // useEffect for sppechRecognition setup
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -19,7 +19,6 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
 
         recognitionRef.current.onstart = () => {
             setIsListening(true);
-            clearTimeout(silenceTimeoutRef.current); // ✅ Reset silence timer on start
         };
 
         recognitionRef.current.onresult = (event) => {
@@ -29,16 +28,16 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
 
             setIsAnswerd(true);
             setMessage(transcript);
+            currMessage=transcript;
 
             if (event.results[0].isFinal) {
                 // ✅ Start a silence timer when final speech is detected
-                silenceTimeoutRef.current = setTimeout(() => {
-                    stopListening();
-                }, 2000); // ✅ Adjust timeout for silence detection
+                stopListening();
             }
         };
 
         recognitionRef.current.onend = () => {
+            if(currMessage.length==0) setIsListening(false) // for if there are no words recorded
             if (!isListening) return; // ✅ Prevent double stopping
             stopListening(); // manually stop listening
         };
@@ -61,9 +60,6 @@ function Voice({ setMessage, setSendingMessage, isListening, setIsListening, set
     function startListening() {  // function to startlistening
         if (!recognitionRef.current) return;
         window.speechSynthesis.cancel();
-        window.setTimeout(() => {  // for force cancel
-            window.speechSynthesis.cancel();
-        }, 100);
         if (typingRef.current) { 
             clearTimeout(typingRef.current);
             typingRef.current = null;

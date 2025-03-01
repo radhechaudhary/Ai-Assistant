@@ -15,7 +15,7 @@ function App() {
   useEffect(()=>{window.speechSynthesis.cancel()},[]) // useEffect to stop the previos speech on reloading
   
   useEffect(()=>{
-    
+
     function speakText(text) { // function to speak the message from gemini
       if (!text || typeof text !== "string") {
           console.warn("Invalid text input for speech synthesis.");
@@ -77,7 +77,7 @@ function App() {
                   index++;
                   speakNextChunk(); // 🔹 Ensures smooth transition
               };
-              utterance.onerror = (e) => console.error("Speech synthesis error:", e.message);
+              utterance.onerror = (e) => console.error("Speech synthesis error:", e);
               synth.speak(utterance); // 🔥 Ensures browser fully loads speech
           }
           else{
@@ -91,10 +91,10 @@ function App() {
           return;
       }
       speakNextChunk(); // ✅ Start speaking
-  }
-    if(sendingMessage && message.length>0){
+    }
+    if(sendingMessage){
       setSendingMessage(false)
-      run(message)
+      run(message) // send message to gemini API 
       .then((data) => {
         if (data) {
           setTimeout(()=>setIsListening(false), 500)
@@ -111,7 +111,7 @@ function App() {
       <img className="doraemon" src={doraemon}/>
       <h2 className="Ai_name" style={{fontSize:"30px"}}> Hi! I am Doraemon</h2>
       <div className='box'>
-        <Voice  setMessage={setMessage} setSendingMessage={setSendingMessage} isListening={isListening} setIsListening={setIsListening} setIsAnswerd={setIsAnswerd} typingRef={typingRef}/>
+        <Voice  message={message}  setMessage={setMessage} setSendingMessage={setSendingMessage} isListening={isListening} setIsListening={setIsListening} setIsAnswerd={setIsAnswerd} typingRef={typingRef}/>
         {isListening?<img src={recording}/>:null}
         {isAnswerd?<div className="ques_ans" ref={scrollBottomRef}>
           <h3 style={{fontSize:'16px', transition:'width 1s ease-in-out'}}>{message}</h3>
