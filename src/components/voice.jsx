@@ -1,68 +1,86 @@
-import React, { useState, useRef, useEffect } from 'react';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
+import React, { useRef, useEffect } from "react";
+import MicIcon from "@mui/icons-material/Mic";
 
-function Voice({ setMessage, setSendingMessage, isListening, setIsListening , setIsAnswerd, typingRef}) {
-    
+function Voice({ setMessage, setSendingMessage, isListening, setIsListening, setIsAnswerd, typingRef }) {
     const recognitionRef = useRef(null);
+    const silenceTimeoutRef = useRef(null);
 
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("Your browser does not support Speech Recognition.");
+            alert("❌ Your browser does not support Speech Recognition.");
             return;
         }
 
         recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false; // Stops automatically when silence is detected
-        recognitionRef.current.interimResults = true;
+        recognitionRef.current.continuous = false; // ✅ Stops when silence is detected
+        recognitionRef.current.interimResults = true; // ✅ Show partial results before finalizing
+        recognitionRef.current.lang = "en-US"; // ✅ Set language to English
 
-        recognitionRef.current.onstart = () => { // listening
+        recognitionRef.current.onstart = () => {
             setIsListening(true);
+            clearTimeout(silenceTimeoutRef.current); // ✅ Reset silence timer on start
         };
 
         recognitionRef.current.onresult = (event) => {
             const transcript = Array.from(event.results)
                 .map((result) => result[0].transcript)
-                .join('');
-            setIsAnswerd(true) // to display the question
-            setMessage(transcript); // setting question
+                .join("");
+
+            setIsAnswerd(true);
+            setMessage(transcript);
+
+            if (event.results[0].isFinal) {
+                // ✅ Start a silence timer when final speech is detected
+                silenceTimeoutRef.current = setTimeout(() => {
+                    stopListening();
+                }, 1200); // ✅ Adjust timeout for silence detection
+            }
         };
 
         recognitionRef.current.onend = () => {
-            setSendingMessage(true);
-            // ❌ No restart here
+            if (!isListening) return; // ✅ Prevent double stopping
+            stopListening();
         };
 
         recognitionRef.current.onerror = (event) => {
             console.error("❌ Speech recognition error:", event.error);
-            if(event.error==='network'){
-                alert('No Internet')
+            if (event.error === "network") {
+                alert("❌ No Internet Connection!");
             }
-            setIsListening(false);
+            stopListening();
         };
 
         return () => {
             if (recognitionRef.current) {
-                recognitionRef.current.stop();
+                recognitionRef.current.abort(); // ✅ Stops recognition properly on unmount
             }
         };
     }, []);
 
     function startListening() {
-        window.speechSynthesis.cancel() // stop previous sppech when started listning
-        clearTimeout(typingRef.current) // stop typing
         if (!recognitionRef.current) return;
+        window.speechSynthesis.cancel();
+        clearTimeout(typingRef.current);
         setIsListening(true);
-        setIsAnswerd(false)
+        setIsAnswerd(false);
         recognitionRef.current.start();
     }
 
-    return (<>
-    {!isListening?<button className="button" onClick={startListening}>
-            Start Listening <MicIcon />
-        </button>:null}</>
-        
+    function stopListening() {
+        if (!recognitionRef.current) return;
+        recognitionRef.current.stop();
+        setSendingMessage(true); // ✅ Sends the message when silence is detected
+    }
+
+    return (
+        <>
+            {!isListening ? (
+                <button className="button" onClick={startListening}>
+                    Start Listening <MicIcon />
+                </button>
+            ) : null}
+        </>
     );
 }
 
